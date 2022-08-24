@@ -1,0 +1,46 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/user/user",
+    "pages/discover/discover",
+    "pages/newGroup/newGroup",
+    "pages/groupSet/groupSet",
+    "pages/groupsDetail/groupsDetail",
+    "pages/newArticle/newArticle"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FFFFFF"
+  },
+  "tabBar": {
+    "color": "#6c6c6c",
+    "selectedColor": "#17B99A",
+    "borderStyle": "white",
+    "backgroundColor": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "./static/tabbar/index.png",
+        "selectedIconPath": "./static/tabbar/index-select.png",
+        "text": "星球"
+      },
+      {
+        "pagePath": "pages/discover/discover",
+        "iconPath": "./static/tabbar/discover.png",
+        "selectedIconPath": "./static/tabbar/discover-select.png",
+        "text": "发现"
+      },
+      {
+        "pagePath": "pages/user/user",
+        "iconPath": "./static/tabbar/user.png",
+        "selectedIconPath": "./static/tabbar/user-select.png",
+        "text": "我"
+      }
+    ]
+  },
+  "usingComponents": {}
+}

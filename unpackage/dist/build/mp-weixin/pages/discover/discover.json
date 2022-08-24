@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "发现",
+  "enablePullDownRefresh": true,
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "sub-title": "/components/sub-title/sub-title",
+    "group": "/components/group-card/group-card",
+    "suggest": "/components/Suggest/Suggest",
+    "activity": "/components/activity-card/activity-card"
+  }
+}

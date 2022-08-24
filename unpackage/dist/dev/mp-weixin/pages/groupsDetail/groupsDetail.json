@@ -1,0 +1,14 @@
+{
+  "navigationStyle": "custom",
+  "disableScroll": true,
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "u-tabs": "/uni_modules/uview-ui/components/u-tabs/u-tabs",
+    "u-empty": "/uni_modules/uview-ui/components/u-empty/u-empty",
+    "top": "/components/g-top/g-top",
+    "pyq": "/components/pyq-card/pyq-card",
+    "info": "/components/info-popup/info-popup",
+    "login-popup": "/components/login-popup/login-popup"
+  }
+}

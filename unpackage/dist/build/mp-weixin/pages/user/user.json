@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "",
+  "enablePullDownRefresh": false,
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "bar": "/components/setting-bar/setting-bar",
+    "login-popup": "/components/login-popup/login-popup"
+  }
+}

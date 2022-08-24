@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u--textarea": "/uni_modules/uview-ui/components/u--textarea/u--textarea"
+  }
+}

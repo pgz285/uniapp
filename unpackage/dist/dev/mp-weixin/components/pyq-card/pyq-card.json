@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "u-read-more": "/uni_modules/uview-ui/components/u-read-more/u-read-more",
+    "u-album": "/uni_modules/uview-ui/components/u-album/u-album"
+  },
+  "component": true
+}

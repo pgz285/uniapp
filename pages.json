@@ -1,0 +1,93 @@
+{
+	"pages": [{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/user/user",
+			"style": {
+				"navigationBarTitleText": "",
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/discover/discover",
+			"style": {
+				"navigationBarTitleText": "发现",
+				"enablePullDownRefresh": true,
+				"navigationStyle": "custom"
+			}
+
+		}, {
+			"path": "pages/newGroup/newGroup",
+			"style": {
+				"navigationStyle": "custom"
+			}
+
+		},
+		{
+			"path": "pages/groupSet/groupSet",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		
+		},{
+            "path" : "pages/groupsDetail/groupsDetail",
+            "style" :                                                                                    
+            {
+                "navigationStyle": "custom",
+				"disableScroll": true
+            }
+            
+        }
+        ,{
+            "path" : "pages/newArticle/newArticle",
+            "style" :                                                                                    
+            {
+                "navigationStyle": "custom"
+            }
+            
+        }
+    ],
+	"tabBar": {
+		// "blurEffect": "extralight",
+		"color": "#6c6c6c",
+		"selectedColor": "#17B99A",
+		"borderStyle": "white",
+		"backgroundColor": "white",
+		"list": [{
+			"pagePath": "pages/index/index",
+			"iconPath": "./static/tabbar/index.png",
+			"selectedIconPath": "./static/tabbar/index-select.png",
+			"text": "星球"
+		}, {
+			"pagePath": "pages/discover/discover",
+			"iconPath": "./static/tabbar/discover.png",
+			"selectedIconPath": "./static/tabbar/discover-select.png",
+			"text": "发现"
+		}, {
+			"pagePath": "pages/user/user",
+			"iconPath": "./static/tabbar/user.png",
+			"selectedIconPath": "./static/tabbar/user-select.png",
+			"text": "我"
+		}]
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#FFFFFF",
+		"app-plus": {
+			"background": "#FFFFFF",
+			"softinputMode": "adjustResize"
+		}
+	}
+}

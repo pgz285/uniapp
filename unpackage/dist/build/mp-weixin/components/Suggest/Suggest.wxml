@@ -1,0 +1,1 @@
+<view data-event-opts="{{[['tap',[['send']]]]}}" class="suggest data-v-7f33a5ed" bindtap="__e"><view class="space-between full hor-center data-v-7f33a5ed"><view class="type data-v-7f33a5ed">编辑推荐</view><image class="icon data-v-7f33a5ed" src="../../static/svg/arrowR.svg" mode></image></view><view class="label text-overflow2 data-v-7f33a5ed">{{''+label+''}}</view></view>

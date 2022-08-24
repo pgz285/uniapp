@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "发现",
+  "enablePullDownRefresh": true,
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-navbar": "/uni_modules/uview-ui/components/u-navbar/u-navbar",
+    "u-icon": "/uni_modules/uview-ui/components/u-icon/u-icon",
+    "sub-title": "/components/sub-title/sub-title",
+    "group": "/components/group-card/group-card",
+    "suggest": "/components/Suggest/Suggest",
+    "activity": "/components/activity-card/activity-card"
+  }
+}

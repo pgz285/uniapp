@@ -1,0 +1,32 @@
+
+.newarticle.data-v-23265186 {
+	width: 100%;
+	padding: 20px 16px;
+}
+.green-bnt.data-v-23265186 {
+	margin-top: 80px;
+	width: 80%;
+	height: 50px;
+	border-radius: 30px;
+	background: #17B99A;
+	box-shadow: 0 15px 30px #E7F8F5;
+	color: #fff;
+	font-family: PingFangSC-Semibold;
+	font-size: 15px;
+	font-weight: normal;
+	line-height: 20px;
+	letter-spacing: 0px;
+}
+.next.data-v-23265186{
+	color: #17B99A;
+
+	border: 1px solid #17B99A;
+	padding: 3px 12px;
+	border-radius: 16px;
+}
+.n-right.data-v-23265186{
+
+		-webkit-transform: translateX(-100px);
+		        transform: translateX(-100px);
+}
+

@@ -1,0 +1,65 @@
+
+.u-popup-slot.data-v-79803dd4 {
+	height: 280px;
+}
+.img.data-v-79803dd4 {
+
+	margin-top: 5px;
+
+
+	margin-top: 25px;
+
+	width: 140px;
+	height: 111px;
+}
+.label.data-v-79803dd4 {
+	font-family: PingFangSC-Regular;
+	font-size: 26px;
+	font-weight: normal;
+	line-height: 40px;
+	letter-spacing: 0px;
+	color: rgba(0, 0, 0, 0.3);
+}
+
+/*  */
+.green-bnt.data-v-79803dd4 {
+	margin-top: 20px;
+	width: 80%;
+	height: 50px;
+	border-radius: 30px;
+	background: #17B99A;
+	box-shadow: 0 15px 30px #E7F8F5;
+	color: #fff;
+	font-family: PingFangSC-Semibold;
+	font-size: 15px;
+	font-weight: normal;
+	line-height: 20px;
+	letter-spacing: 0px;
+}
+.wx.data-v-79803dd4 {
+	width: 24px;
+	height: 24px;
+	margin-right: 6px;
+}
+.check-box.data-v-79803dd4 {
+	padding-top: 5px;
+	font-size: 12px;
+}
+
+/* check */
+.radio.data-v-79803dd4 {
+	margin-right: 5px;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	border: 1px solid rgba(0, 0, 0, 0.3);
+}
+.select.data-v-79803dd4 {
+	border: none;
+}
+.icons.data-v-79803dd4 {
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+}
+

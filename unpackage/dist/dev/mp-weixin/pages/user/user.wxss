@@ -1,0 +1,89 @@
+
+.user-page.data-v-80842834 {
+	width: 100%;
+	height: 100vh;
+	background: #F5F6F6 !important;
+}
+.hd-box.data-v-80842834 {
+	width: 100%;
+	height: auto;
+	background: #fff;
+}
+.hd-top.data-v-80842834 {
+	height: 48px;
+	padding: 10px 16px 0 0;
+}
+.green-bnt.data-v-80842834 {
+	height: 24px;
+	padding: 4px 8px;
+	border-radius: 12px;
+	background: #EDFCF8;
+	font-family: PingFangSC-Regular;
+	font-size: 12px;
+	font-weight: normal;
+	line-height: 20px;
+	letter-spacing: 0px;
+	color: #55B396;
+}
+.rz.data-v-80842834 {
+	width: 15px;
+	height: 15px;
+}
+.ml-1.data-v-80842834 {
+	margin-left: 5px;
+}
+.icon.data-v-80842834 {
+	width: 20px;
+	height: 20px;
+}
+.tip.data-v-80842834 {
+	width: 24px;
+	height: 24px;
+
+	width: 18px;
+	height: 18px;
+	margin-right: 8px;
+}
+
+/* hd-user */
+.hd-user.data-v-80842834 {
+	width: 100%;
+	padding: 16px 16px 24px 16px;
+}
+.stamp.data-v-80842834 {
+	width: 74px;
+	height: 74px;
+	border-radius: 50%;
+	border: 1px solid #EEEEEE;
+	margin-right: 15px;
+}
+.name.data-v-80842834 {
+	font-family: PingFangSC-Semibold;
+	font-size: 17px;
+	font-weight: normal;
+	line-height: 20px;
+	letter-spacing: 0px;
+	color: rgba(0, 0, 0, 0.8);
+}
+.label.data-v-80842834 {
+	font-family: PingFangSC-Regular;
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 20px;
+	letter-spacing: 0px;
+	color: rgba(0, 0, 0, 0.3);
+}
+
+/* hd-bottom */
+.hd-bottom.data-v-80842834 {
+	margin-top: 24px;
+	padding: 0 24px;
+}
+.line.data-v-80842834 {
+	height: 12px;
+	background: #F5F6F6;
+}
+.ml.data-v-80842834{
+	margin-left: 16px;
+}
+

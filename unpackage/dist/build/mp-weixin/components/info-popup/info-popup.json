@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "u-popup": "/uni_modules/uview-ui/components/u-popup/u-popup",
+    "u-tag": "/uni_modules/uview-ui/components/u-tag/u-tag"
+  },
+  "component": true
+}

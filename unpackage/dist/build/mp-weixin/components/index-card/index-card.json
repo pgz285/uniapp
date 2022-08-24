@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "lazy-load": "/uni_modules/muqian-lazyLoad/components/muqian-lazyLoad/muqian-lazyLoad"
+  }
+}

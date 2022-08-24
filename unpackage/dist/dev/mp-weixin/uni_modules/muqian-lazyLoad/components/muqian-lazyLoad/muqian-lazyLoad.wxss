@@ -1,0 +1,14 @@
+.muqian-content.data-v-35be8e74 {
+  overflow: hidden;
+  position: relative;
+}
+.muqian-content .muqian-image.data-v-35be8e74 {
+  display: block;
+  will-change: transform;
+}
+.muqian-content .muqain-load.data-v-35be8e74 {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+

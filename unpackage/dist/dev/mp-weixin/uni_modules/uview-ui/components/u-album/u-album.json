@@ -1,0 +1,7 @@
+{
+  "component": true,
+  "usingComponents": {
+    "u--text": "/uni_modules/uview-ui/components/u--text/u--text",
+    "lazy-load": "/uni_modules/muqian-lazyLoad/components/muqian-lazyLoad/muqian-lazyLoad"
+  }
+}

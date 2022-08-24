@@ -1,0 +1,323 @@
+/* default Setting */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	color: #384268;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-family: 'PingFangSC-Regular', 'Noto Sans TC', sans-serif;
+}
+
+.overflow-hidden {
+	overflow: hidden;
+}
+
+.full{
+	width: 100%;
+}
+/* Font Setting */
+.bold {
+	font-weight: bold;
+}
+
+/* Element specific css */
+.stgap>*:not(:first-child) {
+	margin-top: 5px;
+}
+
+.stgap1>*:not(:first-child) {
+	margin-top: 10px;
+}
+
+.stgap2>*:not(:first-child) {
+	margin-top: 20px;
+}
+
+.stgap3>*:not(:first-child) {
+	margin-top: 30px;
+}
+
+.stgap4>*:not(:first-child) {
+	margin-top: 40px;
+}
+
+.stgap5>*:not(:first-child) {
+	margin-top: 50px;
+}
+
+.stgap6>*:not(:first-child) {
+	margin-top: 60px;
+}
+
+.stgap7>*:not(:first-child) {
+	margin-top: 70px;
+}
+
+.stgap8>*:not(:first-child) {
+	margin-top: 80px;
+}
+
+.stgap9>*:not(:first-child) {
+	margin-top: 90px;
+}
+
+.stgaph1>*:not(:first-child) {
+	margin-top: 15px;
+}
+
+.stgaph2>*:not(:first-child) {
+	margin-top: 25px;
+}
+
+.stgaph3>*:not(:first-child) {
+	margin-top: 35px;
+}
+
+.stgaph4>*:not(:first-child) {
+	margin-top: 45px;
+}
+
+.stgaph5>*:not(:first-child) {
+	margin-top: 55px;
+}
+
+.stgaph6>*:not(:first-child) {
+	margin-top: 65px;
+}
+
+.stgaph7>*:not(:first-child) {
+	margin-top: 75px;
+}
+
+.stgaph8>*:not(:first-child) {
+	margin-top: 85px;
+}
+
+.stgaph9>*:not(:first-child) {
+	margin-top: 95px;
+}
+
+.slgap>*:not(:first-child) {
+	margin-left: 5px;
+}
+
+.slgap1>*:not(:first-child) {
+	margin-left: 10px;
+}
+
+.slgap2>*:not(:first-child) {
+	margin-left: 20px;
+}
+
+.slgap3>*:not(:first-child) {
+	margin-left: 30px;
+}
+
+.slgap4>*:not(:first-child) {
+	margin-left: 40px;
+}
+
+.slgap5>*:not(:first-child) {
+	margin-left: 50px;
+}
+
+.slgap6>*:not(:first-child) {
+	margin-left: 60px;
+}
+
+.slgap7>*:not(:first-child) {
+	margin-left: 70px;
+}
+
+.slgap8>*:not(:first-child) {
+	margin-left: 80px;
+}
+
+.slgap9>*:not(:first-child) {
+	margin-left: 90px;
+}
+
+.slgaph1>*:not(:first-child) {
+	margin-left: 15px;
+}
+
+.slgaph2>*:not(:first-child) {
+	margin-left: 25px;
+}
+
+.slgaph3>*:not(:first-child) {
+	margin-left: 35px;
+}
+
+.slgaph4>*:not(:first-child) {
+	margin-left: 45px;
+}
+
+.slgaph5>*:not(:first-child) {
+	margin-left: 55px;
+}
+
+.slgaph6>*:not(:first-child) {
+	margin-left: 65px;
+}
+
+.slgaph7>*:not(:first-child) {
+	margin-left: 75px;
+}
+
+.slgaph8>*:not(:first-child) {
+	margin-left: 85px;
+}
+
+.slgaph9>*:not(:first-child) {
+	margin-left: 95px;
+}
+
+/* New flex css */
+.flex {
+	display: flex;
+}
+
+.row {
+	display: flex;
+	flex-direction: row !important;
+}
+
+.col {
+	display: flex;
+	flex-direction: column;
+}
+
+.row-rev {
+	display: flex;
+	flex-direction: row-reverse;
+}
+
+.col-rev {
+	display: flex;
+	flex-direction: column-reverse;
+}
+
+.warp {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.nowrap {
+	display: flex;
+	flex-wrap: nowrap;
+}
+
+.space-between {
+	display: flex;
+	justify-content: space-between;
+}
+
+.flex-start {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.flex-center {
+	display: flex;
+	justify-content: center;
+}
+
+.flex-end {
+	display: flex;
+	justify-content: flex-end;
+}
+
+
+
+/* (Horizontal) The main spindle is X, the X axis is symmetrical */
+.hor-center {
+	display: flex;
+	align-items: center;
+}
+
+.hor-start{
+	display: flex;
+	align-items: flex-start;
+}
+.hor-end {
+	display: flex;
+	align-items: flex-end;
+}
+/* (Vertical) The main spindle is Y, the Y axis is symmetrical */
+.ver-center {
+	display: flex;
+	justify-content: center;
+}
+
+.ver-start{
+	display: flex;
+	justify-content: flex-start;
+}
+.ver-end {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.both-center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.text-overflow {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.text-overflow1,
+.text-overflow2,
+.text-overflow3,
+.text-overflow4,
+.text-overflow5 {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+}
+
+.text-overflow1 {
+	-webkit-line-clamp: 1;
+}
+
+.text-overflow2 {
+	-webkit-line-clamp: 2;
+}
+
+.text-overflow3 {
+	-webkit-line-clamp: 3;
+}
+
+.text-overflow4 {
+	-webkit-line-clamp: 4;
+}
+
+.text-overflow5 {
+	-webkit-line-clamp: 5;
+}
+
+.relative {
+	position: relative;
+}
+
+.absolute {
+	position: absolute;
+}
+
+.pre-line {
+	white-space: pre-line;
+	/*換行\n <br/>都能*/
+}
+
+/*== New CSS End ==*/

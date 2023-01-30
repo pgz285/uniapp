@@ -114,6 +114,7 @@
 					}
 				}
 				this.$request('', date).then(res => {
+					console.log(res)
 					// 打印调用成功回调
 					var list = res.data.wxLogin
 				

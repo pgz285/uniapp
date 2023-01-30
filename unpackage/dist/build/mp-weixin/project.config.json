@@ -1,7 +1,8 @@
 {
   "description": "项目配置文件。",
   "packOptions": {
-    "ignore": []
+    "ignore": [],
+    "include": []
   },
   "setting": {
     "urlCheck": false,
@@ -42,21 +43,12 @@
     "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
-  "libVersion": "",
-  "appid": "wx1c9ffd1ae7e8a28a",
+  "libVersion": "2.25.0",
+  "appid": "wx361cc9297c5d7c4e",
   "projectname": "xingqiu",
-  "condition": {
-    "search": {
-      "list": []
-    },
-    "conversation": {
-      "list": []
-    },
-    "game": {
-      "list": []
-    },
-    "miniprogram": {
-      "list": []
-    }
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
   }
 }

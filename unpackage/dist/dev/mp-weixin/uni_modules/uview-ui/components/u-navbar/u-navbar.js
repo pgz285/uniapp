@@ -80,10 +80,10 @@ var components
 try {
   components = {
     uStatusBar: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-status-bar/u-status-bar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-status-bar/u-status-bar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-status-bar/u-status-bar.vue */ 320))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-status-bar/u-status-bar */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-status-bar/u-status-bar")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-status-bar/u-status-bar.vue */ 328))
     },
     uIcon: function() {
-      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 240))
+      return Promise.all(/*! import() | uni_modules/uview-ui/components/u-icon/u-icon */[__webpack_require__.e("common/vendor"), __webpack_require__.e("uni_modules/uview-ui/components/u-icon/u-icon")]).then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-icon/u-icon.vue */ 248))
     }
   }
 } catch (e) {

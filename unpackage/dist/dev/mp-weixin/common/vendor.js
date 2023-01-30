@@ -334,7 +334,7 @@ var promiseInterceptor = {
 
 
 var SYNC_API_RE =
-/^\$|Window$|WindowStyle$|sendHostEvent|sendNativeEvent|restoreGlobal|requireGlobal|getCurrentSubNVue|getMenuButtonBoundingClientRect|^report|interceptors|Interceptor$|getSubNVueById|requireNativePlugin|upx2px|hideKeyboard|canIUse|^create|Sync$|Manager$|base64ToArrayBuffer|arrayBufferToBase64|getLocale|setLocale|invokePushCallback|getWindowInfo|getDeviceInfo|getAppBaseInfo/;
+/^\$|Window$|WindowStyle$|sendHostEvent|sendNativeEvent|restoreGlobal|requireGlobal|getCurrentSubNVue|getMenuButtonBoundingClientRect|^report|interceptors|Interceptor$|getSubNVueById|requireNativePlugin|upx2px|hideKeyboard|canIUse|^create|Sync$|Manager$|base64ToArrayBuffer|arrayBufferToBase64|getLocale|setLocale|invokePushCallback|getWindowInfo|getDeviceInfo|getAppBaseInfo|getSystemSetting|getAppAuthorizeSetting/;
 
 var CONTEXT_API_RE = /^create|Manager$/;
 
@@ -342,7 +342,7 @@ var CONTEXT_API_RE = /^create|Manager$/;
 var CONTEXT_API_RE_EXC = ['createBLEConnection'];
 
 // 同步例外情况
-var ASYNC_API = ['createBLEConnection'];
+var ASYNC_API = ['createBLEConnection', 'createPushMessage'];
 
 var CALLBACK_API_RE = /^on|^off/;
 
@@ -766,8 +766,8 @@ function populateParameters(result) {var _result$brand =
     appVersion: "1.0.0",
     appVersionCode: "100",
     appLanguage: getAppLanguage(hostLanguage),
-    uniCompileVersion: "3.4.18",
-    uniRuntimeVersion: "3.4.18",
+    uniCompileVersion: "3.6.4",
+    uniRuntimeVersion: "3.6.4",
     uniPlatform: undefined || "mp-weixin",
     deviceBrand: deviceBrand,
     deviceModel: model,
@@ -910,6 +910,19 @@ var getWindowInfo = {
   } };
 
 
+var getAppAuthorizeSetting = {
+  returnValue: function returnValue(result) {var
+    locationReducedAccuracy = result.locationReducedAccuracy;
+
+    result.locationAccuracy = 'unsupported';
+    if (locationReducedAccuracy === true) {
+      result.locationAccuracy = 'reduced';
+    } else if (locationReducedAccuracy === false) {
+      result.locationAccuracy = 'full';
+    }
+  } };
+
+
 // import navigateTo from 'uni-helpers/navigate-to'
 
 var protocols = {
@@ -921,7 +934,8 @@ var protocols = {
   showActionSheet: showActionSheet,
   getAppBaseInfo: getAppBaseInfo,
   getDeviceInfo: getDeviceInfo,
-  getWindowInfo: getWindowInfo };
+  getWindowInfo: getWindowInfo,
+  getAppAuthorizeSetting: getAppAuthorizeSetting };
 
 var todos = [
 'vibrate',
@@ -1146,6 +1160,7 @@ function getApiCallbacks(params) {
 
 var cid;
 var cidErrMsg;
+var enabled;
 
 function normalizePushMessage(message) {
   try {
@@ -1157,17 +1172,25 @@ function normalizePushMessage(message) {
 function invokePushCallback(
 args)
 {
-  if (args.type === 'clientId') {
+  if (args.type === 'enabled') {
+    enabled = true;
+  } else if (args.type === 'clientId') {
     cid = args.cid;
     cidErrMsg = args.errMsg;
     invokeGetPushCidCallbacks(cid, args.errMsg);
   } else if (args.type === 'pushMsg') {
-    onPushMessageCallbacks.forEach(function (callback) {
-      callback({
-        type: 'receive',
-        data: normalizePushMessage(args.message) });
+    var message = {
+      type: 'receive',
+      data: normalizePushMessage(args.message) };
 
-    });
+    for (var i = 0; i < onPushMessageCallbacks.length; i++) {
+      var callback = onPushMessageCallbacks[i];
+      callback(message);
+      // 该消息已被阻止
+      if (message.stopped) {
+        break;
+      }
+    }
   } else if (args.type === 'click') {
     onPushMessageCallbacks.forEach(function (callback) {
       callback({
@@ -1187,7 +1210,7 @@ function invokeGetPushCidCallbacks(cid, errMsg) {
   getPushCidCallbacks.length = 0;
 }
 
-function getPushClientid(args) {
+function getPushClientId(args) {
   if (!isPlainObject(args)) {
     args = {};
   }var _getApiCallbacks =
@@ -1199,25 +1222,33 @@ function getPushClientid(args) {
   var hasSuccess = isFn(success);
   var hasFail = isFn(fail);
   var hasComplete = isFn(complete);
-  getPushCidCallbacks.push(function (cid, errMsg) {
-    var res;
-    if (cid) {
-      res = {
-        errMsg: 'getPushClientid:ok',
-        cid: cid };
 
-      hasSuccess && success(res);
-    } else {
-      res = {
-        errMsg: 'getPushClientid:fail' + (errMsg ? ' ' + errMsg : '') };
-
-      hasFail && fail(res);
+  Promise.resolve().then(function () {
+    if (typeof enabled === 'undefined') {
+      enabled = false;
+      cid = '';
+      cidErrMsg = 'uniPush is not enabled';
     }
-    hasComplete && complete(res);
+    getPushCidCallbacks.push(function (cid, errMsg) {
+      var res;
+      if (cid) {
+        res = {
+          errMsg: 'getPushClientId:ok',
+          cid: cid };
+
+        hasSuccess && success(res);
+      } else {
+        res = {
+          errMsg: 'getPushClientId:fail' + (errMsg ? ' ' + errMsg : '') };
+
+        hasFail && fail(res);
+      }
+      hasComplete && complete(res);
+    });
+    if (typeof cid !== 'undefined') {
+      invokeGetPushCidCallbacks(cid, cidErrMsg);
+    }
   });
-  if (typeof cid !== 'undefined') {
-    Promise.resolve().then(function () {return invokeGetPushCidCallbacks(cid, cidErrMsg);});
-  }
 }
 
 var onPushMessageCallbacks = [];
@@ -1241,7 +1272,7 @@ var offPushMessage = function offPushMessage(fn) {
 
 var api = /*#__PURE__*/Object.freeze({
   __proto__: null,
-  getPushClientid: getPushClientid,
+  getPushClientId: getPushClientId,
   onPushMessage: onPushMessage,
   offPushMessage: offPushMessage,
   invokePushCallback: invokePushCallback });
@@ -1259,7 +1290,17 @@ var customize = cached(function (str) {
 function initTriggerEvent(mpInstance) {
   var oldTriggerEvent = mpInstance.triggerEvent;
   var newTriggerEvent = function newTriggerEvent(event) {for (var _len3 = arguments.length, args = new Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {args[_key3 - 1] = arguments[_key3];}
-    return oldTriggerEvent.apply(mpInstance, [customize(event)].concat(args));
+    // 事件名统一转驼峰格式，仅处理：当前组件为 vue 组件、当前组件为 vue 组件子组件
+    if (this.$vm || this.dataset && this.dataset.comType) {
+      event = customize(event);
+    } else {
+      // 针对微信/QQ小程序单独补充驼峰格式事件，以兼容历史项目
+      var newEvent = customize(event);
+      if (newEvent !== event) {
+        oldTriggerEvent.apply(this, [newEvent].concat(args));
+      }
+    }
+    return oldTriggerEvent.apply(this, [event].concat(args));
   };
   try {
     // 京东小程序 triggerEvent 为只读
@@ -1356,6 +1397,29 @@ function initHooks(mpOptions, hooks, vueOptions) {
       };
     }
   });
+}
+
+function initUnknownHooks(mpOptions, vueOptions) {var excludes = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  findHooks(vueOptions).forEach(function (hook) {return initHook$1(mpOptions, hook, excludes);});
+}
+
+function findHooks(vueOptions) {var hooks = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+  if (vueOptions) {
+    Object.keys(vueOptions).forEach(function (name) {
+      if (name.indexOf('on') === 0 && isFn(vueOptions[name])) {
+        hooks.push(name);
+      }
+    });
+  }
+  return hooks;
+}
+
+function initHook$1(mpOptions, hook, excludes) {
+  if (excludes.indexOf(hook) === -1 && !hasOwn(mpOptions, hook)) {
+    mpOptions[hook] = function (args) {
+      return this.$vm && this.$vm.__call_hook(hook, args);
+    };
+  }
 }
 
 function initVueComponent(Vue, vueOptions) {
@@ -1495,18 +1559,25 @@ function parsePropType(key, type, defaultValue, file) {
   return type;
 }
 
-function initProperties(props) {var isBehavior = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;var file = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+function initProperties(props) {var isBehavior = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;var file = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';var options = arguments.length > 3 ? arguments[3] : undefined;
   var properties = {};
   if (!isBehavior) {
     properties.vueId = {
       type: String,
       value: '' };
 
-    // 用于字节跳动小程序模拟抽象节点
-    properties.generic = {
-      type: Object,
-      value: null };
+    {
+      if (options.virtualHost) {
+        properties.virtualHostStyle = {
+          type: null,
+          value: '' };
 
+        properties.virtualHostClass = {
+          type: null,
+          value: '' };
+
+      }
+    }
     // scopedSlotsCompiler auto
     properties.scopedSlotsCompiler = {
       type: String,
@@ -1636,7 +1707,7 @@ function getExtraValue(vm, dataPathsArray) {
   return context;
 }
 
-function processEventExtra(vm, extra, event) {
+function processEventExtra(vm, extra, event, __args__) {
   var extraObj = {};
 
   if (Array.isArray(extra) && extra.length) {
@@ -1659,11 +1730,7 @@ function processEventExtra(vm, extra, event) {
           if (dataPath === '$event') {// $event
             extraObj['$' + index] = event;
           } else if (dataPath === 'arguments') {
-            if (event.detail && event.detail.__args__) {
-              extraObj['$' + index] = event.detail.__args__;
-            } else {
-              extraObj['$' + index] = [event];
-            }
+            extraObj['$' + index] = event.detail ? event.detail.__args__ || __args__ : __args__;
           } else if (dataPath.indexOf('$event.') === 0) {// $event.target.value
             extraObj['$' + index] = vm.__get_value(dataPath.replace('$event.', ''), event);
           } else {
@@ -1690,6 +1757,12 @@ function getObjByArray(arr) {
 
 function processEventArgs(vm, event) {var args = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];var extra = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];var isCustom = arguments.length > 4 ? arguments[4] : undefined;var methodName = arguments.length > 5 ? arguments[5] : undefined;
   var isCustomMPEvent = false; // wxcomponent 组件，传递原始 event 对象
+
+  // fixed 用户直接触发 mpInstance.triggerEvent
+  var __args__ = isPlainObject(event.detail) ?
+  event.detail.__args__ || [event.detail] :
+  [event.detail];
+
   if (isCustom) {// 自定义事件
     isCustomMPEvent = event.currentTarget &&
     event.currentTarget.dataset &&
@@ -1698,11 +1771,11 @@ function processEventArgs(vm, event) {var args = arguments.length > 2 && argumen
       if (isCustomMPEvent) {
         return [event];
       }
-      return event.detail.__args__ || event.detail;
+      return __args__;
     }
   }
 
-  var extraObj = processEventExtra(vm, extra, event);
+  var extraObj = processEventExtra(vm, extra, event, __args__);
 
   var ret = [];
   args.forEach(function (arg) {
@@ -1711,7 +1784,7 @@ function processEventArgs(vm, event) {var args = arguments.length > 2 && argumen
         ret.push(event.target.value);
       } else {
         if (isCustom && !isCustomMPEvent) {
-          ret.push(event.detail.__args__[0]);
+          ret.push(__args__[0]);
         } else {// wxcomponent 组件或内置组件
           ret.push(event);
         }
@@ -1802,7 +1875,9 @@ function handleEvent(event) {var _this2 = this;
           }
           var handler = handlerCtx[methodName];
           if (!isFn(handler)) {
-            throw new Error(" _vm.".concat(methodName, " is not a function"));
+            var _type = _this2.$vm.mpType === 'page' ? 'Page' : 'Component';
+            var path = _this2.route || _this2.is;
+            throw new Error("".concat(_type, " \"").concat(path, "\" does not have a method \"").concat(methodName, "\""));
           }
           if (isOnce) {
             if (handler.once) {
@@ -2016,6 +2091,7 @@ function parseBaseApp(vm, _ref3)
   initAppLocale(_vue.default, vm, normalizeLocale(wx.getSystemInfoSync().language) || LOCALE_EN);
 
   initHooks(appOptions, hooks);
+  initUnknownHooks(appOptions, vm.$options);
 
   return appOptions;
 }
@@ -2185,7 +2261,7 @@ function parseBaseComponent(vueComponentOptions)
     options: options,
     data: initData(vueOptions, _vue.default.prototype),
     behaviors: initBehaviors(vueOptions, initBehavior),
-    properties: initProperties(vueOptions.props, false, vueOptions.__file),
+    properties: initProperties(vueOptions.props, false, vueOptions.__file, options),
     lifetimes: {
       attached: function attached() {
         var properties = this.properties;
@@ -2294,6 +2370,7 @@ function parseBasePage(vuePageOptions, _ref6)
     this.$vm.$mp.query = query; // 兼容 mpvue
     this.$vm.__call_hook('onLoad', query);
   };
+  initUnknownHooks(pageOptions.methods, vuePageOptions, ['onReady']);
 
   return pageOptions;
 }
@@ -8779,9 +8856,12 @@ function internalMixin(Vue) {
 
   Vue.prototype.$emit = function(event) {
     if (this.$scope && event) {
-      (this.$scope['_triggerEvent'] || this.$scope['triggerEvent']).call(this.$scope, event, {
-        __args__: toArray(arguments, 1)
-      });
+      var triggerEvent = this.$scope['_triggerEvent'] || this.$scope['triggerEvent'];
+      if (triggerEvent) {
+        triggerEvent.call(this.$scope, event, {
+          __args__: toArray(arguments, 1)
+        });
+      }
     }
     return oldEmit.apply(this, arguments)
   };
@@ -8948,7 +9028,8 @@ var LIFECYCLE_HOOKS$1 = [
     // 'onReady', // 兼容旧版本，应该移除该事件
     'onPageShow',
     'onPageHide',
-    'onPageResize'
+    'onPageResize',
+    'onUploadDouyinVideo'
 ];
 function lifecycleMixin$1(Vue) {
 
@@ -19830,7 +19911,132 @@ module.exports = {
 /* 214 */,
 /* 215 */,
 /* 216 */,
-/* 217 */,
+/* 217 */
+/*!********************************************************************************************************!*\
+  !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-search/props.js ***!
+  \********************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
+  props: {
+    // 搜索框形状，round-圆形，square-方形
+    shape: {
+      type: String,
+      default: uni.$u.props.search.shape },
+
+    // 搜索框背景色，默认值#f2f2f2
+    bgColor: {
+      type: String,
+      default: uni.$u.props.search.bgColor },
+
+    // 占位提示文字
+    placeholder: {
+      type: String,
+      default: uni.$u.props.search.placeholder },
+
+    // 是否启用清除控件
+    clearabled: {
+      type: Boolean,
+      default: uni.$u.props.search.clearabled },
+
+    // 是否自动聚焦
+    focus: {
+      type: Boolean,
+      default: uni.$u.props.search.focus },
+
+    // 是否在搜索框右侧显示取消按钮
+    showAction: {
+      type: Boolean,
+      default: uni.$u.props.search.showAction },
+
+    // 右边控件的样式
+    actionStyle: {
+      type: Object,
+      default: uni.$u.props.search.actionStyle },
+
+    // 取消按钮文字
+    actionText: {
+      type: String,
+      default: uni.$u.props.search.actionText },
+
+    // 输入框内容对齐方式，可选值为 left|center|right
+    inputAlign: {
+      type: String,
+      default: uni.$u.props.search.inputAlign },
+
+    // input输入框的样式，可以定义文字颜色，大小等，对象形式
+    inputStyle: {
+      type: Object,
+      default: uni.$u.props.search.inputStyle },
+
+    // 是否启用输入框
+    disabled: {
+      type: Boolean,
+      default: uni.$u.props.search.disabled },
+
+    // 边框颜色
+    borderColor: {
+      type: String,
+      default: uni.$u.props.search.borderColor },
+
+    // 搜索图标的颜色，默认同输入框字体颜色
+    searchIconColor: {
+      type: String,
+      default: uni.$u.props.search.searchIconColor },
+
+    // 输入框字体颜色
+    color: {
+      type: String,
+      default: uni.$u.props.search.color },
+
+    // placeholder的颜色
+    placeholderColor: {
+      type: String,
+      default: uni.$u.props.search.placeholderColor },
+
+    // 左边输入框的图标，可以为uView图标名称或图片路径
+    searchIcon: {
+      type: String,
+      default: uni.$u.props.search.searchIcon },
+
+    searchIconSize: {
+      type: [Number, String],
+      default: uni.$u.props.search.searchIconSize },
+
+    // 组件与其他上下左右元素之间的距离，带单位的字符串形式，如"30px"、"30px 20px"等写法
+    margin: {
+      type: String,
+      default: uni.$u.props.search.margin },
+
+    // 开启showAction时，是否在input获取焦点时才显示
+    animation: {
+      type: Boolean,
+      default: uni.$u.props.search.animation },
+
+    // 输入框的初始化内容
+    value: {
+      type: String,
+      default: uni.$u.props.search.value },
+
+    // 输入框最大能输入的长度，-1为不限制长度(来自uniapp文档)
+    maxlength: {
+      type: [String, Number],
+      default: uni.$u.props.search.maxlength },
+
+    // 搜索框高度，单位px
+    height: {
+      type: [String, Number],
+      default: uni.$u.props.search.height },
+
+    // 搜索框左侧文本
+    label: {
+      type: [String, Number, null],
+      default: uni.$u.props.search.label } } };exports.default = _default;
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
+
+/***/ }),
 /* 218 */,
 /* 219 */,
 /* 220 */,
@@ -19858,7 +20064,15 @@ module.exports = {
 /* 242 */,
 /* 243 */,
 /* 244 */,
-/* 245 */
+/* 245 */,
+/* 246 */,
+/* 247 */,
+/* 248 */,
+/* 249 */,
+/* 250 */,
+/* 251 */,
+/* 252 */,
+/* 253 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-icon/icons.js ***!
   \******************************************************************************************************/
@@ -20081,7 +20295,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
   'uicon-en': "\uE692" };exports.default = _default;
 
 /***/ }),
-/* 246 */
+/* 254 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-icon/props.js ***!
   \******************************************************************************************************/
@@ -20178,14 +20392,6 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 247 */,
-/* 248 */,
-/* 249 */,
-/* 250 */,
-/* 251 */,
-/* 252 */,
-/* 253 */,
-/* 254 */,
 /* 255 */,
 /* 256 */,
 /* 257 */,
@@ -20213,7 +20419,15 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* 279 */,
 /* 280 */,
 /* 281 */,
-/* 282 */
+/* 282 */,
+/* 283 */,
+/* 284 */,
+/* 285 */,
+/* 286 */,
+/* 287 */,
+/* 288 */,
+/* 289 */,
+/* 290 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-tabs/props.js ***!
   \******************************************************************************************************/
@@ -20285,14 +20499,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 283 */,
-/* 284 */,
-/* 285 */,
-/* 286 */,
-/* 287 */,
-/* 288 */,
-/* 289 */,
-/* 290 */
+/* 291 */,
+/* 292 */,
+/* 293 */,
+/* 294 */,
+/* 295 */,
+/* 296 */,
+/* 297 */,
+/* 298 */
 /*!*******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-empty/props.js ***!
   \*******************************************************************************************************/
@@ -20359,14 +20573,6 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 291 */,
-/* 292 */,
-/* 293 */,
-/* 294 */,
-/* 295 */,
-/* 296 */,
-/* 297 */,
-/* 298 */,
 /* 299 */,
 /* 300 */,
 /* 301 */,
@@ -20387,7 +20593,15 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* 316 */,
 /* 317 */,
 /* 318 */,
-/* 319 */
+/* 319 */,
+/* 320 */,
+/* 321 */,
+/* 322 */,
+/* 323 */,
+/* 324 */,
+/* 325 */,
+/* 326 */,
+/* 327 */
 /*!**********************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-textarea/props.js ***!
   \**********************************************************************************************************/
@@ -20509,12 +20723,12 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 320 */,
-/* 321 */,
-/* 322 */,
-/* 323 */,
-/* 324 */,
-/* 325 */
+/* 328 */,
+/* 329 */,
+/* 330 */,
+/* 331 */,
+/* 332 */,
+/* 333 */
 /*!************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-status-bar/props.js ***!
   \************************************************************************************************************/
@@ -20530,14 +20744,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 326 */,
-/* 327 */,
-/* 328 */,
-/* 329 */,
-/* 330 */,
-/* 331 */,
-/* 332 */,
-/* 333 */
+/* 334 */,
+/* 335 */,
+/* 336 */,
+/* 337 */,
+/* 338 */,
+/* 339 */,
+/* 340 */,
+/* 341 */
 /*!*******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-popup/props.js ***!
   \*******************************************************************************************************/
@@ -20624,14 +20838,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 334 */,
-/* 335 */,
-/* 336 */,
-/* 337 */,
-/* 338 */,
-/* 339 */,
-/* 340 */,
-/* 341 */
+/* 342 */,
+/* 343 */,
+/* 344 */,
+/* 345 */,
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */
 /*!*****************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/muqian-lazyLoad/static/loading.png ***!
   \*****************************************************************************************************/
@@ -20641,7 +20855,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3Ycb+AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6OUM0QjNBQjkyQUQ2MTFFQTlCNUQ4RTIzNDE5RUIxNjciIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6OUM0QjNBQkEyQUQ2MTFFQTlCNUQ4RTIzNDE5RUIxNjciPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo5QzRCM0FCNzJBRDYxMUVBOUI1RDhFMjM0MTlFQjE2NyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo5QzRCM0FCODJBRDYxMUVBOUI1RDhFMjM0MTlFQjE2NyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PtRHfPcAAAAzUExURZWVldfX18PDw62trZubm9zc3Li4uKGhoebm5tLS0uHh4c3Nzaenp729vcjIyLKysuvr6141L40AAAcXSURBVHja7NzZlqpGAEBR5lG0//9rIw7IJKJi4or7PGTdtN10wr5SVAEGf/qqArsAiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAIiIAAERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAgAgJEQIAICBABERAg+nmQFMi5Jis+sIniED23jSzIgLTtg2D//iYme/8QBM/9lQ+CAEhbNLM3N9hEHAThX7GPCiBfAxK1b51kD+R7QMLjXg7iCsgWIPUh7pfVozG791oeBPngm48G583uW5GkBvI+SBaM2xXDn1oqum423bX/mgF5FySc2cv93Voug9TdZotsggnkBZB2NzbhrSY5HnoG07jei8dvzsJB/c3W60SALILE46+WCztsbhPR7R2VJq0ukEcT49nyy8QhaKcRa3fYHZD4+ufqOJAcgDz8/59vtw1I3QP5K6JsOG0vm3hce4I8LQp/BaRZGJC3AAn7IKOKXbC+7EdA5vdmmVwOLksgRThqOqiH4XEGsht+peoPUE8U/jJIO5OLH4GEwUslV5G0PTBG5Uiw/Y2jyigO3l9HAHKv9PYb82LloH74dZBoBUgar+l48NsNvtD0fkez9iwrAvIYZDRCl+Xs149Hm/KZmQ+QjUCiO1ei4ru7EsgnQYrkznlQb7thCuRfAzlOAPN72427P4VA/i2Q/DKT/Ls/VR8fvIBsDZIuz7TPF6TCbnk4GJkB2RokejTjuE7/unlgCuSTIO0Cy+Plp6vDfnQlBchy8QtjSHVd3EgmK1bHLm+H6+nXYbz2DuQRSPnqoL7vvq0u70on4zvxgCyWD3b9UyDVdW24PaWaiGTnFZJwPIQAebDpIKheBIm7n124ZthMJipAlkqHO+IZkP1tbfzOJark/A7MgKyvvl60fRqkvXfhuow+t9+q00+0/yyBrK8ZngOtBzldhw2X9tvpNGty0gvkmbPeJ0Cy/r09s/stbmfo0yMWkEdjevgKyOn2t2pxv7UXoibTdCDLje9/Ww1ymqzn87dbp92242ZmMRjI8hASvwKSLq4udqN6ksw8nxXN3tszD9L8Gkg+2mFrQYql5az4tvFj5xOx4VwnSdeBtGdyPwUytxK77pBVlNHdO7OK3rh/eTPUvdutT3fO52tuHMqD4N7llv8pyOQQ//w19YVDfX27+Sfuby9/6nau4pdA8vEdOZuChEH/quHt0Jg+IRJ/5+PrHwKZXfjbDiS73Zo7mu5UkzX7uTsXe0e/7nC3ePf1O69+BUg2XDfZCqSqOu7rGVf8cHBe8zhC2b61dtUHXv0OkGo6ZL4JkpbRYXdUaFevivx2M/1GIOctNh949TtAoumQ+TpIHMX54CJu+8BDd8FkE5BqcZh/59XvAClmTvKfB0nDqIlHo3T70SftyW1eX9dXtgQJqs1f/Q6QaOa/7wmQKtxH8eiGoCRuovODIO3VxOMmruZbHrLyD7z6DSDtGyT7ew1kf9hNn07c986JTovzzem0Id9wUG+Vk/IDr34DSNR7huZJkMFT6vEhqrPx/j5cnlZML8N6/PAzh9Y99Flm5Yde/c9BquDOkvkKkMP58dA4qi9vivE8JOvGz/j8FokfPpr288+pH2ZPOZrLmeGD+7KOh6dqYWJ48ki7yUg0tz0go/fv/LLddfV3sgOLJyaGPY/zrSlh1a36Arkzoue9CyG35ze6E6/dzO2Ga0EGHqdRJIkfn9/8OEjTW8Vq91ZWh39FeehWA7Nu9ft8CpUEk1WWOyDF0OPyEU2Pnzf/bZC0P6IPzmAvu7KauQBVrgKpJ0tG2arHzX8e5Pb3PezNs/PrX+3JMyCLn9XXf37tPFHvt09WfCDDjx+yyn1/p1V11j7GnB/q3leLuVva79S/tzed+db08YpF4uOZtmz/9oXWMq6BCAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAERECACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiACAgQAQEiIEAEBIiAALELvqt/BBgACqVeUBXxcCkAAAAASUVORK5CYII="
 
 /***/ }),
-/* 342 */
+/* 350 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/muqian-lazyLoad/static/loadFail.png ***!
   \******************************************************************************************************/
@@ -20651,14 +20865,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3Ycb+AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6ODdDMjhENDYyQUQ2MTFFQTlDQ0VBODgxQjFFOEEyMEMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6ODdDMjhENDcyQUQ2MTFFQTlDQ0VBODgxQjFFOEEyMEMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo4N0MyOEQ0NDJBRDYxMUVBOUNDRUE4ODFCMUU4QTIwQyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo4N0MyOEQ0NTJBRDYxMUVBOUNDRUE4ODFCMUU4QTIwQyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PhLwhikAAAAzUExURZWVldfX162t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"
 
 /***/ }),
-/* 343 */,
-/* 344 */,
-/* 345 */,
-/* 346 */,
-/* 347 */,
-/* 348 */,
-/* 349 */,
-/* 350 */
+/* 351 */,
+/* 352 */,
+/* 353 */,
+/* 354 */,
+/* 355 */,
+/* 356 */,
+/* 357 */,
+/* 358 */
 /*!*********************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-overlay/props.js ***!
   \*********************************************************************************************************/
@@ -20690,14 +20904,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 351 */,
-/* 352 */,
-/* 353 */,
-/* 354 */,
-/* 355 */,
-/* 356 */,
-/* 357 */,
-/* 358 */
+/* 359 */,
+/* 360 */,
+/* 361 */,
+/* 362 */,
+/* 363 */,
+/* 364 */,
+/* 365 */,
+/* 366 */
 /*!**************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-loading-icon/props.js ***!
   \**************************************************************************************************************/
@@ -20764,14 +20978,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 359 */,
-/* 360 */,
-/* 361 */,
-/* 362 */,
-/* 363 */,
-/* 364 */,
-/* 365 */,
-/* 366 */
+/* 367 */,
+/* 368 */,
+/* 369 */,
+/* 370 */,
+/* 371 */,
+/* 372 */,
+/* 373 */,
+/* 374 */
 /*!*****************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-gap/props.js ***!
   \*****************************************************************************************************/
@@ -20803,14 +21017,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 367 */,
-/* 368 */,
-/* 369 */,
-/* 370 */,
-/* 371 */,
-/* 372 */,
-/* 373 */,
-/* 374 */
+/* 375 */,
+/* 376 */,
+/* 377 */,
+/* 378 */,
+/* 379 */,
+/* 380 */,
+/* 381 */,
+/* 382 */
 /*!*******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-badge/props.js ***!
   \*******************************************************************************************************/
@@ -20890,14 +21104,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 375 */,
-/* 376 */,
-/* 377 */,
-/* 378 */,
-/* 379 */,
-/* 380 */,
-/* 381 */,
-/* 382 */
+/* 383 */,
+/* 384 */,
+/* 385 */,
+/* 386 */,
+/* 387 */,
+/* 388 */,
+/* 389 */,
+/* 390 */
 /*!*****************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-tag/props.js ***!
   \*****************************************************************************************************/
@@ -20989,14 +21203,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 383 */,
-/* 384 */,
-/* 385 */,
-/* 386 */,
-/* 387 */,
-/* 388 */,
-/* 389 */,
-/* 390 */
+/* 391 */,
+/* 392 */,
+/* 393 */,
+/* 394 */,
+/* 395 */,
+/* 396 */,
+/* 397 */,
+/* 398 */
 /*!***********************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-read-more/props.js ***!
   \***********************************************************************************************************/
@@ -21065,14 +21279,14 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 391 */,
-/* 392 */,
-/* 393 */,
-/* 394 */,
-/* 395 */,
-/* 396 */,
-/* 397 */,
-/* 398 */
+/* 399 */,
+/* 400 */,
+/* 401 */,
+/* 402 */,
+/* 403 */,
+/* 404 */,
+/* 405 */,
+/* 406 */
 /*!*******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-album/props.js ***!
   \*******************************************************************************************************/
@@ -21139,21 +21353,21 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 399 */,
-/* 400 */,
-/* 401 */,
-/* 402 */,
-/* 403 */,
-/* 404 */,
-/* 405 */,
-/* 406 */,
 /* 407 */,
 /* 408 */,
 /* 409 */,
 /* 410 */,
 /* 411 */,
 /* 412 */,
-/* 413 */
+/* 413 */,
+/* 414 */,
+/* 415 */,
+/* 416 */,
+/* 417 */,
+/* 418 */,
+/* 419 */,
+/* 420 */,
+/* 421 */
 /*!************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-transition/props.js ***!
   \************************************************************************************************************/
@@ -21185,7 +21399,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 414 */
+/* 422 */
 /*!*****************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-transition/transition.js ***!
   \*****************************************************************************************************************/
@@ -21196,7 +21410,7 @@ module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAAGQCAMAAAC3
 Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _regenerator = _interopRequireDefault(__webpack_require__(/*! ./node_modules/@babel/runtime/regenerator */ 36));
 
 
-var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 415));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
+var _nvueAniMap = _interopRequireDefault(__webpack_require__(/*! ./nvue.ani-map.js */ 423));function _interopRequireDefault(obj) {return obj && obj.__esModule ? obj : { default: obj };}function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {Promise.resolve(value).then(_next, _throw);}}function _asyncToGenerator(fn) {return function () {var self = this,args = arguments;return new Promise(function (resolve, reject) {var gen = fn.apply(self, args);function _next(value) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);}function _throw(err) {asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);}_next(undefined);});};} // 定义一个一定时间后自动成功的promise，让调用nextTick方法处，进入下一个then方法
 var nextTick = function nextTick() {return new Promise(function (resolve) {return setTimeout(resolve, 1000 / 50);});}; // nvue动画模块实现细节抽离在外部文件
 
 // 定义类名，通过给元素动态切换类名，赋予元素一定的css动画样式
@@ -21350,7 +21564,7 @@ var getClassNames = function getClassNames(name) {return {
     } } };exports.default = _default;
 
 /***/ }),
-/* 415 */
+/* 423 */
 /*!*******************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-transition/nvue.ani-map.js ***!
   \*******************************************************************************************************************/
@@ -21426,14 +21640,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
     'leave-to': { opacity: 0, transform: 'scale(0.95)' } } };exports.default = _default;
 
 /***/ }),
-/* 416 */,
-/* 417 */,
-/* 418 */,
-/* 419 */,
-/* 420 */,
-/* 421 */,
-/* 422 */,
-/* 423 */
+/* 424 */,
+/* 425 */,
+/* 426 */,
+/* 427 */,
+/* 428 */,
+/* 429 */,
+/* 430 */,
+/* 431 */
 /*!*************************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-safe-bottom/props.js ***!
   \*************************************************************************************************************/
@@ -21445,14 +21659,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
   props: {} };exports.default = _default;
 
 /***/ }),
-/* 424 */,
-/* 425 */,
-/* 426 */,
-/* 427 */,
-/* 428 */,
-/* 429 */,
-/* 430 */,
-/* 431 */
+/* 432 */,
+/* 433 */,
+/* 434 */,
+/* 435 */,
+/* 436 */,
+/* 437 */,
+/* 438 */,
+/* 439 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-text/props.js ***!
   \******************************************************************************************************/
@@ -21570,12 +21784,12 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 432 */,
-/* 433 */,
-/* 434 */,
-/* 435 */,
-/* 436 */,
-/* 437 */
+/* 440 */,
+/* 441 */,
+/* 442 */,
+/* 443 */,
+/* 444 */,
+/* 445 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-text/value.js ***!
   \******************************************************************************************************/
@@ -21669,7 +21883,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ }),
-/* 438 */
+/* 446 */
 /*!************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/libs/mixin/button.js ***!
   \************************************************************************************************/
@@ -21690,7 +21904,7 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
     openType: String } };exports.default = _default;
 
 /***/ }),
-/* 439 */
+/* 447 */
 /*!**************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/libs/mixin/openType.js ***!
   \**************************************************************************************************/
@@ -21723,14 +21937,14 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
     } } };exports.default = _default;
 
 /***/ }),
-/* 440 */,
-/* 441 */,
-/* 442 */,
-/* 443 */,
-/* 444 */,
-/* 445 */,
-/* 446 */,
-/* 447 */
+/* 448 */,
+/* 449 */,
+/* 450 */,
+/* 451 */,
+/* 452 */,
+/* 453 */,
+/* 454 */,
+/* 455 */
 /*!******************************************************************************************************!*\
   !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-link/props.js ***!
   \******************************************************************************************************/
@@ -21774,178 +21988,6 @@ Object.defineProperty(exports, "__esModule", { value: true });exports.default = 
     text: {
       type: String,
       default: uni.$u.props.link.text } } };exports.default = _default;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
-
-/***/ }),
-/* 448 */,
-/* 449 */,
-/* 450 */,
-/* 451 */,
-/* 452 */,
-/* 453 */,
-/* 454 */,
-/* 455 */,
-/* 456 */,
-/* 457 */,
-/* 458 */,
-/* 459 */,
-/* 460 */,
-/* 461 */,
-/* 462 */,
-/* 463 */,
-/* 464 */,
-/* 465 */,
-/* 466 */,
-/* 467 */,
-/* 468 */,
-/* 469 */,
-/* 470 */,
-/* 471 */,
-/* 472 */,
-/* 473 */,
-/* 474 */,
-/* 475 */,
-/* 476 */,
-/* 477 */,
-/* 478 */,
-/* 479 */,
-/* 480 */,
-/* 481 */,
-/* 482 */,
-/* 483 */,
-/* 484 */,
-/* 485 */,
-/* 486 */,
-/* 487 */,
-/* 488 */,
-/* 489 */,
-/* 490 */,
-/* 491 */,
-/* 492 */,
-/* 493 */,
-/* 494 */
-/*!********************************************************************************************************!*\
-  !*** /Users/peng/Documents/HBuilderProjects/xingqiu/uni_modules/uview-ui/components/u-search/props.js ***!
-  \********************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(uni) {Object.defineProperty(exports, "__esModule", { value: true });exports.default = void 0;var _default = {
-  props: {
-    // 搜索框形状，round-圆形，square-方形
-    shape: {
-      type: String,
-      default: uni.$u.props.search.shape },
-
-    // 搜索框背景色，默认值#f2f2f2
-    bgColor: {
-      type: String,
-      default: uni.$u.props.search.bgColor },
-
-    // 占位提示文字
-    placeholder: {
-      type: String,
-      default: uni.$u.props.search.placeholder },
-
-    // 是否启用清除控件
-    clearabled: {
-      type: Boolean,
-      default: uni.$u.props.search.clearabled },
-
-    // 是否自动聚焦
-    focus: {
-      type: Boolean,
-      default: uni.$u.props.search.focus },
-
-    // 是否在搜索框右侧显示取消按钮
-    showAction: {
-      type: Boolean,
-      default: uni.$u.props.search.showAction },
-
-    // 右边控件的样式
-    actionStyle: {
-      type: Object,
-      default: uni.$u.props.search.actionStyle },
-
-    // 取消按钮文字
-    actionText: {
-      type: String,
-      default: uni.$u.props.search.actionText },
-
-    // 输入框内容对齐方式，可选值为 left|center|right
-    inputAlign: {
-      type: String,
-      default: uni.$u.props.search.inputAlign },
-
-    // input输入框的样式，可以定义文字颜色，大小等，对象形式
-    inputStyle: {
-      type: Object,
-      default: uni.$u.props.search.inputStyle },
-
-    // 是否启用输入框
-    disabled: {
-      type: Boolean,
-      default: uni.$u.props.search.disabled },
-
-    // 边框颜色
-    borderColor: {
-      type: String,
-      default: uni.$u.props.search.borderColor },
-
-    // 搜索图标的颜色，默认同输入框字体颜色
-    searchIconColor: {
-      type: String,
-      default: uni.$u.props.search.searchIconColor },
-
-    // 输入框字体颜色
-    color: {
-      type: String,
-      default: uni.$u.props.search.color },
-
-    // placeholder的颜色
-    placeholderColor: {
-      type: String,
-      default: uni.$u.props.search.placeholderColor },
-
-    // 左边输入框的图标，可以为uView图标名称或图片路径
-    searchIcon: {
-      type: String,
-      default: uni.$u.props.search.searchIcon },
-
-    searchIconSize: {
-      type: [Number, String],
-      default: uni.$u.props.search.searchIconSize },
-
-    // 组件与其他上下左右元素之间的距离，带单位的字符串形式，如"30px"、"30px 20px"等写法
-    margin: {
-      type: String,
-      default: uni.$u.props.search.margin },
-
-    // 开启showAction时，是否在input获取焦点时才显示
-    animation: {
-      type: Boolean,
-      default: uni.$u.props.search.animation },
-
-    // 输入框的初始化内容
-    value: {
-      type: String,
-      default: uni.$u.props.search.value },
-
-    // 输入框最大能输入的长度，-1为不限制长度(来自uniapp文档)
-    maxlength: {
-      type: [String, Number],
-      default: uni.$u.props.search.maxlength },
-
-    // 搜索框高度，单位px
-    height: {
-      type: [String, Number],
-      default: uni.$u.props.search.height },
-
-    // 搜索框左侧文本
-    label: {
-      type: [String, Number, null],
-      default: uni.$u.props.search.label } } };exports.default = _default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./node_modules/@dcloudio/uni-mp-weixin/dist/index.js */ 1)["default"]))
 
 /***/ })

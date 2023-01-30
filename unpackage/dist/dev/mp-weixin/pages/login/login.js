@@ -98,7 +98,7 @@ var components
 try {
   components = {
     uToast: function() {
-      return __webpack_require__.e(/*! import() | uni_modules/uview-ui/components/u-toast/u-toast */ "uni_modules/uview-ui/components/u-toast/u-toast").then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-toast/u-toast.vue */ 226))
+      return __webpack_require__.e(/*! import() | uni_modules/uview-ui/components/u-toast/u-toast */ "uni_modules/uview-ui/components/u-toast/u-toast").then(__webpack_require__.bind(null, /*! @/uni_modules/uview-ui/components/u-toast/u-toast.vue */ 234))
     }
   }
 } catch (e) {
@@ -271,6 +271,7 @@ var _default =
 
 
       this.$request('', date).then(function (res) {
+        console.log(res);
         // 打印调用成功回调
         var list = res.data.wxLogin;
 

@@ -35,7 +35,6 @@
 	font-size: 17px;
 	font-weight: normal;
 	line-height: 20px;
-	margin-right: 10px;
 	letter-spacing: 0px;
 	color: rgba(0, 0, 0, 0.8);
 }
@@ -58,11 +57,14 @@
 .center.data-v-01969cb8 {
 	width: calc(100vw - 80px);
 }
-.bottom.data-v-01969cb8{
+.bottom.data-v-01969cb8 {
 	position: absolute;
 	bottom: 60px;
 	width: 100%;
 
 	bottom: 30px;
+}
+.ml-1.data-v-01969cb8 {
+	margin-left: 10px;
 }
 
